@@ -1,0 +1,78 @@
+import { useState, useEffect } from "react";
+
+function App() {
+
+  const [characters, setCharacters] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredCharacters = characters.filter((char) => {
+    return char.name.toLowerCase().includes(searchQuery.toLowerCase());
+  })
+
+  useEffect(() => {
+    const fetchCharacters = async () => {
+      try {
+        setIsLoading(true);
+        const res = await fetch("https://rickandmortyapi.com/api/character")
+        if (!res.ok) {
+          throw new Error(`Gagal ambil data, Status Error ${res.status}`);
+        }
+        const data = await res.json();
+        setCharacters(data.results);
+        // console.log(data.results);
+      } catch (Error) {
+        console.error(`Error: ${Error}`)
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchCharacters();
+  }, []);
+
+
+  return (
+    <main className="p-8 bg-gray-900 min-h-screen text-white">
+      <h1 className="text-3xl font-bold mb-6 text-center">
+        Rick & Morty Characters
+        {/* kolom pencarian dan daftar karakter bakal di sini */}
+      </h1>
+      <div className="flex justify-center mb-8">
+        <input type="text"
+          placeholder="Cari character"
+          className="px-4 py-2 w-full max-w-md rounded bt-gray-800 border border-gray-700 text-white focus:outline-none focus:border-blue-500"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)} />
+      </div>
+      {isLoading ? (
+        <div className="text-center text-xl font-semibold animate-pulse text-blue-400">
+          Sedang memuat data .......
+        </div>
+      ) : (
+        filteredCharacters.length === 0 ? (
+          <div>
+            character "{searchQuery}" tidak di temukan
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {filteredCharacters.map((char) => (
+              <div key={char.id} className="bg-gray-800 rounded-lg overflow-hiden shadow-lg border border-gray-700 hover:border-blue-500 transition">
+                <img src={char.image} alt={char.name} className="w-full h-48 object-cover" />
+                <div className="p-4">
+                  <h2 className="text-xl font-bold truncate">{char.name}</h2>
+                  <p className="text-gray-400 text-sm mt-1">Species: {char.species}</p>
+                  <span className={`inline-block px-2 py-1 text-xs font-semibold rounded mt-2 ${char.status === "Alive" ? "bg-green-600" : char.status === "Dead" ? "bg-red-600" : "bg-gray-600"}`}>{char.status}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      )};
+    </main>
+
+  )
+
+}
+
+export default App;
